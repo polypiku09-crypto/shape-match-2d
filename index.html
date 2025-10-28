@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shape Match — เกมจับคู่รูปทรง 2D</title>
+  <meta name="description" content="เกมการศึกษาสำหรับเด็ก ลาก–วางรูปทรงให้ตรงเงา ฝึกการสังเกต มอเตอร์สกิล และคณิตศาสตร์เบื้องต้น" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="wrap row">
+      <h1>จับคู่รูปทรง & เงา <span class="badge">Shape Match 2D</span></h1>
+      <div class="toolbar">
+        <button id="btnSfxToggle" class="ghost" title="เปิด/ปิดเอฟเฟกต์เสียง">🔊 SFX</button>
+        <select id="difficulty" title="เลือกระดับความยาก">
+          <option value="easy">ง่าย</option>
+          <option value="normal" selected>ปกติ</option>
+          <option value="hard">ยาก</option>
+          <option value="custom">กำหนดเอง…</option>
+        </select>
+        <button id="btnStop" class="primary" title="หยุดเกม">⏹ หยุด</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="card" role="application" aria-label="เกมจับคู่รูปทรง">
+      <div class="row" style="margin-bottom:10px;">
+        <div class="stats">
+          <div>รอบ: <b><span id="currentRound">0</span>/<span id="maxRounds">10</span></b></div>
+          <div>เวลา: <b id="time">0.0</b>s</div>
+          <div>คะแนน: <b id="score">0</b></div>
+          <div class="progress" title="ดาวความสำเร็จ"><span class="star" id="s1"></span><span class="star" id="s2"></span><span class="star" id="s3"></span></div>
+        </div>
+      </div>
+
+      <div class="board" id="board" aria-describedby="desc"></div>
+      <p id="desc" class="sr-only">ลากชิ้นส่วนจากถาดวางให้ตรงกับรูปทรง</p>
+      
+      <div class="tray" id="tray" aria-label="ถาดชิ้นส่วน"></div>
+    </div>
+  </main>
+
+  <footer>
+    เหมาะสำหรับเด็กอายุ 5+ | เล่นได้ทั้งเมาส์และจอสัมผัส
+  </footer>
+
+  <div class="modal" id="modal">
+    <div class="panel">
+      <h2>ตั้งค่าเกม</h2>
+      <div style="display:grid; gap:10px;">
+        <label><input type="checkbox" id="optSound" checked> เสียงเอฟเฟกต์</label>
+        <label>จำนวนชิ้นส่วน/รอบ (โหมดกำหนดเอง):
+          <input id="optCustomPieces" type="number" min="3" max="12" value="6" style="width:80px; margin-left:6px;">
+        </label>
+        <label>เวลามาตรฐานสำหรับดาว 3 ดวง (วินาที):
+          <input id="optParTime" type="number" min="5" max="120" value="25" style="width:80px; margin-left:6px;">
+        </label>
+        <label>ระดับเสียงเอฟเฟกต์:
+          <input id="optSfxVolume" type="range" min="0" max="100" value="70" style="width:120px; margin-left:6px;">
+        </label>
+        <label>จำนวนรอบการเล่น:
+          <input id="optMaxRounds" type="number" min="1" max="50" value="10" style="width:80px; margin-left:6px;">
+        </label>
+      </div>
+      <div class="actions">
+        <button id="btnClear">ล้างสถิติ</button>
+        <button id="btnClose" class="primary">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="stopModal">
+    <div class="panel">
+      <h2>⏸ หยุดเกม</h2>
+      <p>คุณต้องการทำอะไรต่อ?</p>
+      <div class="menu-buttons">
+        <button id="btnResumeGame" class="menu-btn primary">▶ เล่นต่อ</button>
+        <button id="btnRestartLevel" class="menu-btn">🔄 เริ่มรอบใหม่</button>
+        <button id="btnSettings" class="menu-btn">⚙️ ตั้งค่า</button>
+        <button id="btnBackToMenu" class="menu-btn">🏠 กลับหน้าหลัก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal open" id="mainMenu">
+    <div class="panel main-menu-panel">
+      <h2 class="menu-title">🎮 Shape Match 2D</h2>
+      <p class="menu-subtitle">เกมจับคู่รูปทรงสำหรับเด็ก</p>
+      <div class="menu-buttons">
+        <button id="btnPlayMenu" class="menu-btn primary">▶ เริ่มเกม</button>
+        <button id="btnHowToPlay" class="menu-btn">📖 วิธีเล่น</button>
+        <button id="btnExitGame" class="menu-btn">🚪 ออกจากเกม</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="difficultyMenu">
+    <div class="panel">
+      <h2>เลือกระดับความยาก</h2>
+      <div class="menu-buttons">
+        <button class="menu-btn difficulty-btn" data-difficulty="easy">😊 ง่าย<br><small>3 ชิ้นส่วน</small></button>
+        <button class="menu-btn difficulty-btn" data-difficulty="normal">😎 ปกติ<br><small>6 ชิ้นส่วน</small></button>
+        <button class="menu-btn difficulty-btn" data-difficulty="hard">😤 ยาก<br><small>9 ชิ้นส่วน</small></button>
+        <button class="menu-btn difficulty-btn" data-difficulty="custom">⚙️ กำหนดเอง<br><small>ปรับแต่งได้</small></button>
+      </div>
+      <div class="actions">
+        <button id="btnBackToMain">← กลับ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="howToPlayModal">
+    <div class="panel">
+      <h2>📖 วิธีเล่น</h2>
+      <div class="how-to-play">
+        <div class="instruction">
+          <span class="step-number">1</span>
+          <div>
+            <h3>เลือกชิ้นส่วน</h3>
+            <p>มองหารูปทรงในถาดด้านล่างที่ตรงกับรูปด้านบน</p>
+          </div>
+        </div>
+        <div class="instruction">
+          <span class="step-number">2</span>
+          <div>
+            <h3>ลากและวาง</h3>
+            <p>ลากชิ้นส่วนรูปทรงไปวางในช่องที่ตรงกัน สีและรูปร่างต้องตรงกันทุกอย่าง</p>
+          </div>
+        </div>
+        <div class="instruction">
+          <span class="step-number">3</span>
+          <div>
+            <h3>รับคะแนนและดาว</h3>
+            <p>วางให้ครบทุกชิ้นให้เร็วที่สุด! ยิ่งเร็วยิ่งได้ดาวเยอะ (⭐⭐⭐ สูงสุด)</p>
+          </div>
+        </div>
+        <div class="tip-box">
+          <strong>💡 เคล็ดลับ:</strong>
+          <ul>
+            <li>สามารถหยุดเกมชั่วคราวได้ด้วยปุ่ม "หยุด"</li>
+            <li>เล่นได้ทั้งเมาส์และจอสัมผัส</li>
+            <li>ปรับเสียงและจำนวนรอบได้ในเมนูตั้งค่า</li>
+          </ul>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnCloseHowTo" class="primary">เข้าใจแล้ว</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="levelCompleteModal">
+    <div class="panel">
+      <h2>สำเร็จ!</h2>
+      <p>คุณใช้เวลา: <b id="completeTime">0.0</b> วินาที</p>
+      <div class="stars-complete">
+        <span class="star big" id="cs1"></span>
+        <span class="star big" id="cs2"></span>
+        <span class="star big" id="cs3"></span>
+      </div>
+      <div class="actions">
+        <button id="btnNextLevel" class="primary">รอบต่อไป</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="gameOverModal">
+    <div class="panel">
+      <h2>🎉 จบเกม!</h2>
+      <div class="game-over-stats">
+        <p>คุณเล่นจบ <b id="finalRounds">0</b> รอบ</p>
+        <p>คะแนนรวม: <b id="finalScore">0</b> คะแนน</p>
+        <p>ค่าเฉลี่ยต่อรอบ: <b id="avgScore">0</b> คะแนน</p>
+        <div class="stars-summary">
+          <div>⭐ x <span id="star1Count">0</span></div>
+          <div>⭐⭐ x <span id="star2Count">0</span></div>
+          <div>⭐⭐⭐ x <span id="star3Count">0</span></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="btnPlayAgain" class="primary">เล่นใหม่</button>
+        <button id="btnBackToMenuFromGameOver">กลับหน้าหลัก</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
