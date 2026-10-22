@@ -4,7 +4,7 @@ A browser puzzle game where players drag 2D shapes onto their matching shadows. 
 
 เกมจับคู่รูปทรงกับเงา 2D ลากและวางชิ้นส่วนให้ตรงกับเงา
 
-**Play it:** https://polypiku09-crypto.github.io/shape-match-2d/
+**Play it:** https://polypiku.github.io/shape-match-2d/
 
 ![Shape Match 2D](screenshots/game.png)
 
